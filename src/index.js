@@ -31,7 +31,7 @@ function checksCreateTodosUserAvailability(request, response, next) {
   } else if ( isFreeUserAvaiable ) {
     return next()
   } else {
-    return response.status(404).json({ error: "Maximum amount of tasks exceeded! Turn Pro right now and create unlimited tasks!" })
+    return response.status(403).json({ error: "Maximum amount of tasks exceeded! Turn Pro right now and create unlimited tasks!" })
   }
 }
 
@@ -48,12 +48,12 @@ function checksTodoExists(request, response, next) {
   // uuid package already makes the validation of an possible uuid string
   const validateId = validate(id)
 
-  if ( !validateId ) { return response.status(401).json({ error: 'Invalid id!' }) }
+  if ( !validateId ) { return response.status(400).json({ error: 'Invalid id!' }) }
 
   // Validate task
   const toDo = user.todos.find( task => task.id === id )
 
-  if ( !toDo ) { return response.status(401).json({ error: 'No task found with the given id!' }) }
+  if ( !toDo ) { return response.status(404).json({ error: 'No task found with the given id!' }) }
 
   request.user = user
   request.todo = toDo
@@ -67,7 +67,7 @@ function findUserById(request, response, next) {
   const { id } = request.params
   const user = users.find( user => user.id === id )
 
-  if( !user ) { return response.status(400).json({error: "User not found!"}) }
+  if( !user ) { return response.status(404).json({error: "User not found!"}) }
 
   request.user = user
   response.status(200).send()
@@ -96,6 +96,11 @@ app.post('/users', (request, response) => {
 
   return response.status(201).json(user);
 });
+
+// Get all users ------> Just for testing the pro turning function
+app.get('/users', (request, response) => {
+  return response.status(200).json(users)
+})
 
 app.get('/users/:id', findUserById, (request, response) => {
   const { user } = request;
