@@ -10,19 +10,69 @@ app.use(cors());
 const users = [];
 
 function checksExistsUserAccount(request, response, next) {
-  // Complete aqui
+  const { username } = request.headers
+  const user = users.find( user => user.username === username )
+
+  if( !user ) { return response.status(404).json({error: "User not found!"}) }
+
+  request.user = user
+
+  return next()
 }
 
 function checksCreateTodosUserAvailability(request, response, next) {
-  // Complete aqui
+  const { user } = request
+
+  const isUserPro = ( user.pro === true )
+  const isFreeUserAvaiable = ( user.todos.length < 10 )
+
+  if ( isUserPro ) {
+    return next()
+  } else if ( isFreeUserAvaiable ) {
+    return next()
+  } else {
+    return response.status(404).json({ error: "Maximum amount of tasks exceeded! Turn Pro right now and create unlimited tasks!" })
+  }
 }
 
 function checksTodoExists(request, response, next) {
-  // Complete aqui
+  const { username } = request.headers
+  const { id } = request.params
+
+  // Validate user
+  const user = users.find( user => user.username === username )
+
+  if ( !user ) { return response.status(404).json({ error: 'User not found!' }) }
+  
+  // Validate id
+  // uuid package already makes the validation of an possible uuid string
+  const validateId = validate(id)
+
+  if ( !validateId ) { return response.status(401).json({ error: 'Invalid id!' }) }
+
+  // Validate task
+  const toDo = user.todos.find( task => task.id === id )
+
+  if ( !toDo ) { return response.status(401).json({ error: 'No task found with the given id!' }) }
+
+  request.user = user
+  request.todo = toDo
+
+  response.status(200).send()
+
+  return next()
 }
 
 function findUserById(request, response, next) {
-  // Complete aqui
+  const { id } = request.params
+  const user = users.find( user => user.id === id )
+
+  if( !user ) { return response.status(400).json({error: "User not found!"}) }
+
+  request.user = user
+  response.status(200).send()
+
+  return next()
 }
 
 app.post('/users', (request, response) => {
